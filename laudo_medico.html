@@ -1,0 +1,825 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sistema de Laudo por Voz – Pro Coração</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --crimson: #9B1C2E;
+    --crimson-dark: #6B0E1E;
+    --crimson-light: #C9374E;
+    --gold: #C5A253;
+    --gold-light: #E2C87A;
+    --cream: #FAF7F2;
+    --ink: #1A1208;
+    --gray: #6B6457;
+    --border: #DDD4C3;
+    --white: #FFFFFF;
+    --rec-red: #E53E3E;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--cream);
+    color: var(--ink);
+    min-height: 100vh;
+  }
+
+  /* ── TOP BAR ── */
+  .topbar {
+    background: var(--crimson-dark);
+    color: var(--cream);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 32px;
+    border-bottom: 3px solid var(--gold);
+  }
+  .topbar-brand { display: flex; align-items: center; gap: 12px; }
+  .heart-icon { font-size: 1.5rem; }
+  .topbar-title { font-family: 'Cormorant Garamond', serif; font-size: 1.3rem; letter-spacing: 0.05em; }
+  .topbar-sub { font-size: 0.7rem; letter-spacing: 0.15em; text-transform: uppercase; color: var(--gold-light); }
+  .topbar-meta { font-size: 0.75rem; color: var(--gold-light); text-align: right; }
+
+  /* ── LAYOUT ── */
+  .app { display: grid; grid-template-columns: 340px 1fr; gap: 0; min-height: calc(100vh - 64px); }
+
+  /* ── SIDEBAR (CONTROLS) ── */
+  .sidebar {
+    background: var(--white);
+    border-right: 1px solid var(--border);
+    padding: 24px 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    overflow-y: auto;
+  }
+
+  .section-label {
+    font-size: 0.65rem;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--gold);
+    font-weight: 500;
+    margin-bottom: 8px;
+    border-bottom: 1px solid var(--border);
+    padding-bottom: 4px;
+  }
+
+  .field-group { display: flex; flex-direction: column; gap: 12px; }
+
+  .field label {
+    font-size: 0.72rem;
+    color: var(--gray);
+    font-weight: 500;
+    display: block;
+    margin-bottom: 4px;
+  }
+
+  .field input, .field select {
+    width: 100%;
+    padding: 9px 12px;
+    border: 1.5px solid var(--border);
+    border-radius: 6px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.85rem;
+    color: var(--ink);
+    background: var(--cream);
+    transition: border-color 0.2s;
+    outline: none;
+  }
+  .field input:focus, .field select:focus { border-color: var(--crimson); }
+
+  /* ── EXAM TYPE CHIPS ── */
+  .exam-chips { display: flex; flex-wrap: wrap; gap: 6px; }
+  .chip {
+    padding: 5px 12px;
+    border-radius: 20px;
+    font-size: 0.72rem;
+    font-weight: 500;
+    cursor: pointer;
+    border: 1.5px solid var(--border);
+    background: transparent;
+    color: var(--gray);
+    transition: all 0.15s;
+  }
+  .chip:hover { border-color: var(--crimson-light); color: var(--crimson); }
+  .chip.active { background: var(--crimson); border-color: var(--crimson); color: white; }
+
+  /* ── SEÇÕES DO LAUDO ── */
+  .section-chips { display: flex; flex-wrap: wrap; gap: 6px; }
+  .sec-chip {
+    padding: 4px 10px;
+    border-radius: 4px;
+    font-size: 0.7rem;
+    cursor: pointer;
+    border: 1px solid var(--border);
+    background: transparent;
+    color: var(--gray);
+    transition: all 0.15s;
+  }
+  .sec-chip:hover { border-color: var(--gold); color: var(--gold); }
+  .sec-chip.active { background: var(--gold); border-color: var(--gold); color: var(--ink); }
+
+  /* ── MIC BUTTON ── */
+  .mic-area { display: flex; flex-direction: column; align-items: center; gap: 12px; padding: 8px 0; }
+
+  .mic-btn {
+    width: 80px; height: 80px;
+    border-radius: 50%;
+    border: none;
+    cursor: pointer;
+    background: var(--crimson);
+    color: white;
+    font-size: 2rem;
+    display: flex; align-items: center; justify-content: center;
+    box-shadow: 0 4px 20px rgba(155,28,46,0.35);
+    transition: all 0.2s;
+    position: relative;
+  }
+  .mic-btn:hover { background: var(--crimson-dark); transform: scale(1.05); }
+  .mic-btn.recording {
+    background: var(--rec-red);
+    animation: pulse 1.2s infinite;
+    box-shadow: 0 4px 30px rgba(229,62,62,0.5);
+  }
+  @keyframes pulse {
+    0%,100% { box-shadow: 0 4px 30px rgba(229,62,62,0.5); }
+    50% { box-shadow: 0 4px 50px rgba(229,62,62,0.8), 0 0 0 12px rgba(229,62,62,0.12); }
+  }
+
+  .mic-status {
+    font-size: 0.75rem;
+    color: var(--gray);
+    text-align: center;
+    min-height: 18px;
+    transition: color 0.2s;
+  }
+  .mic-status.active { color: var(--rec-red); font-weight: 500; }
+
+  .interim-box {
+    background: #FFF5F5;
+    border: 1px dashed #FC8181;
+    border-radius: 6px;
+    padding: 8px 12px;
+    font-size: 0.8rem;
+    color: #9B2C2C;
+    min-height: 36px;
+    width: 100%;
+    font-style: italic;
+  }
+
+  /* ── ACTION BUTTONS ── */
+  .action-btns { display: flex; flex-direction: column; gap: 8px; }
+
+  .btn {
+    padding: 10px 16px;
+    border-radius: 6px;
+    border: none;
+    cursor: pointer;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.8rem;
+    font-weight: 500;
+    display: flex; align-items: center; gap: 8px;
+    transition: all 0.15s;
+  }
+  .btn-primary { background: var(--crimson); color: white; }
+  .btn-primary:hover { background: var(--crimson-dark); }
+  .btn-gold { background: var(--gold); color: var(--ink); }
+  .btn-gold:hover { background: var(--gold-light); }
+  .btn-outline { background: transparent; border: 1.5px solid var(--border); color: var(--gray); }
+  .btn-outline:hover { border-color: var(--crimson-light); color: var(--crimson); }
+  .btn-danger { background: transparent; border: 1.5px solid #FC8181; color: #C53030; }
+  .btn-danger:hover { background: #FFF5F5; }
+  .btn span.ico { font-size: 1rem; }
+
+  /* ── MAIN AREA ── */
+  .main { padding: 28px 36px; overflow-y: auto; }
+
+  /* ── LAUDO PREVIEW ── */
+  .laudo-card {
+    background: white;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    box-shadow: 0 2px 20px rgba(0,0,0,0.06);
+    max-width: 860px;
+    margin: 0 auto;
+  }
+
+  /* ── PRINT AREA ── */
+  #printArea {
+    padding: 40px 52px;
+    font-family: 'Cormorant Garamond', serif;
+  }
+
+  /* CABEÇALHO */
+  .laudo-header {
+    border-bottom: 2px solid var(--crimson);
+    padding-bottom: 16px;
+    margin-bottom: 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+  }
+  .clinic-info { }
+  .clinic-name {
+    font-size: 1.8rem;
+    font-weight: 600;
+    color: var(--crimson-dark);
+    letter-spacing: 0.04em;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .clinic-sub {
+    font-size: 0.8rem;
+    color: var(--gray);
+    font-family: 'DM Sans', sans-serif;
+    margin-top: 2px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+  .clinic-logo-heart {
+    color: var(--crimson);
+    font-size: 1.6rem;
+  }
+  .laudo-date-box {
+    text-align: right;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.78rem;
+    color: var(--gray);
+  }
+  .laudo-date-box strong { display: block; font-size: 1rem; color: var(--ink); }
+
+  /* PACIENTE */
+  .patient-bar {
+    background: linear-gradient(135deg, var(--crimson-dark) 0%, var(--crimson) 100%);
+    color: white;
+    border-radius: 6px;
+    padding: 12px 20px;
+    margin-bottom: 16px;
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 12px;
+  }
+  .patient-field label {
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.6rem;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    opacity: 0.75;
+    display: block;
+    margin-bottom: 2px;
+  }
+  .patient-field span {
+    font-size: 0.95rem;
+    font-weight: 600;
+  }
+
+  .exam-tag {
+    display: inline-block;
+    background: var(--gold);
+    color: var(--ink);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.72rem;
+    font-weight: 600;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    padding: 4px 14px;
+    border-radius: 20px;
+    margin-bottom: 20px;
+  }
+
+  /* BODY DO LAUDO */
+  .laudo-body { }
+
+  .laudo-section {
+    margin-bottom: 18px;
+  }
+  .laudo-section-title {
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.65rem;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--crimson);
+    font-weight: 600;
+    border-bottom: 1px solid #EEE6D8;
+    padding-bottom: 4px;
+    margin-bottom: 8px;
+  }
+
+  .editable-section {
+    font-size: 1rem;
+    line-height: 1.7;
+    color: var(--ink);
+    min-height: 40px;
+    outline: none;
+    border: 1.5px dashed transparent;
+    border-radius: 4px;
+    padding: 6px 8px;
+    transition: border-color 0.2s, background 0.2s;
+    font-family: 'Cormorant Garamond', serif;
+  }
+  .editable-section:focus, .editable-section.target {
+    border-color: var(--gold);
+    background: #FFFDF5;
+  }
+  .editable-section:empty:before {
+    content: attr(data-placeholder);
+    color: #C8BAA5;
+    font-style: italic;
+    font-size: 0.95rem;
+  }
+
+  /* ASSINATURA */
+  .signature-area {
+    margin-top: 40px;
+    padding-top: 20px;
+    border-top: 1px solid var(--border);
+    display: flex;
+    justify-content: flex-end;
+  }
+  .signature-block { text-align: center; min-width: 260px; }
+  .sig-line {
+    border-top: 1.5px solid var(--ink);
+    margin-bottom: 6px;
+  }
+  .sig-name { font-size: 1rem; font-weight: 600; }
+  .sig-crm { font-family: 'DM Sans', sans-serif; font-size: 0.75rem; color: var(--gray); }
+
+  /* ── VOICE INDICATOR FLOATING ── */
+  .voice-indicator {
+    position: fixed;
+    bottom: 28px; right: 28px;
+    background: var(--rec-red);
+    color: white;
+    border-radius: 30px;
+    padding: 10px 20px;
+    font-size: 0.8rem;
+    font-weight: 500;
+    display: none;
+    align-items: center; gap: 8px;
+    box-shadow: 0 4px 20px rgba(229,62,62,0.4);
+    z-index: 100;
+    animation: fadeIn 0.2s;
+  }
+  .voice-indicator.show { display: flex; }
+  .rec-dot { width: 8px; height: 8px; border-radius: 50%; background: white; animation: blink 0.8s infinite; }
+  @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0} }
+  @keyframes fadeIn { from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:translateY(0)} }
+
+  /* ── PRINT ── */
+  @media print {
+    body { background: white; }
+    .topbar, .sidebar, .action-btns, .main > *:not(.laudo-card) { display: none !important; }
+    .app { display: block; }
+    .main { padding: 0; }
+    .laudo-card { border: none; box-shadow: none; max-width: 100%; }
+    #printArea { padding: 20px 40px; }
+    .editable-section { border: none !important; background: transparent !important; }
+    .print-hide { display: none !important; }
+    .mic-area, .action-btns, .section-chips { display: none !important; }
+  }
+
+  .toolbar-row {
+    background: #F5F0E8;
+    border-bottom: 1px solid var(--border);
+    padding: 10px 36px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    max-width: 860px;
+    margin: 0 auto;
+    border-radius: 8px 8px 0 0;
+  }
+  .toolbar-row span {
+    font-size: 0.72rem;
+    color: var(--gray);
+  }
+
+  .notice {
+    background: #EFF8F5;
+    border: 1px solid #9AE6B4;
+    border-radius: 6px;
+    padding: 8px 14px;
+    font-size: 0.75rem;
+    color: #276749;
+    margin-top: 4px;
+  }
+  .notice.warn {
+    background: #FFFBEB;
+    border-color: #F6E05E;
+    color: #744210;
+  }
+
+  .chars-count {
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.7rem;
+    color: var(--gray);
+    text-align: right;
+    padding: 4px 8px;
+  }
+</style>
+</head>
+<body>
+
+<!-- TOP BAR -->
+<div class="topbar">
+  <div class="topbar-brand">
+    <span class="heart-icon">❤️</span>
+    <div>
+      <div class="topbar-title">Sistema de Laudo por Voz</div>
+      <div class="topbar-sub">Pro Coração · Laudos Digitais</div>
+    </div>
+  </div>
+  <div class="topbar-meta">
+    <span id="clockDisplay"></span><br>
+    <span style="font-size:0.65rem;opacity:0.7">Laudos em tempo real por voz</span>
+  </div>
+</div>
+
+<div class="app">
+
+  <!-- SIDEBAR -->
+  <div class="sidebar">
+
+    <!-- TIPO DE EXAME -->
+    <div>
+      <div class="section-label">Tipo de Exame</div>
+      <div class="exam-chips">
+        <button class="chip active" onclick="selectExam(this,'Ecocardiograma')">Ecocardiograma</button>
+        <button class="chip" onclick="selectExam(this,'Eletrocardiograma')">Eletrocardiograma</button>
+        <button class="chip" onclick="selectExam(this,'Imagem')">Imagem</button>
+        <button class="chip" onclick="selectExam(this,'Laboratório')">Laboratório</button>
+        <button class="chip" onclick="selectExam(this,'Holter')">Holter</button>
+        <button class="chip" onclick="selectExam(this,'Outro')">Outro</button>
+      </div>
+    </div>
+
+    <!-- DADOS DO PACIENTE -->
+    <div>
+      <div class="section-label">Dados do Paciente</div>
+      <div class="field-group">
+        <div class="field">
+          <label>Nome completo</label>
+          <input type="text" id="patientName" placeholder="José Alves da Silva" oninput="updateLaudo()">
+        </div>
+        <div class="field">
+          <label>Data de nascimento</label>
+          <input type="date" id="patientDOB" oninput="updateLaudo()">
+        </div>
+        <div class="field">
+          <label>Médico solicitante</label>
+          <input type="text" id="solicitante" placeholder="Dr. Nome Sobrenome" oninput="updateLaudo()">
+        </div>
+      </div>
+    </div>
+
+    <!-- DADOS DO MÉDICO LAUDADOR -->
+    <div>
+      <div class="section-label">Médico Laudador</div>
+      <div class="field-group">
+        <div class="field">
+          <label>Nome completo</label>
+          <input type="text" id="doctorName" placeholder="Dr. Carlos Mendes" oninput="updateLaudo()">
+        </div>
+        <div class="field">
+          <label>CRM</label>
+          <input type="text" id="doctorCRM" placeholder="CRM/RJ 12345" oninput="updateLaudo()">
+        </div>
+        <div class="field">
+          <label>Especialidade</label>
+          <input type="text" id="doctorSpec" placeholder="Cardiologista" oninput="updateLaudo()">
+        </div>
+      </div>
+    </div>
+
+    <!-- SEÇÃO ALVO -->
+    <div>
+      <div class="section-label">Gravar em</div>
+      <div class="section-chips" id="sectionChips">
+        <button class="sec-chip active" onclick="selectSection(this,'findings')" data-sec="findings">Achados</button>
+        <button class="sec-chip" onclick="selectSection(this,'conclusion')" data-sec="conclusion">Conclusão</button>
+        <button class="sec-chip" onclick="selectSection(this,'observations')" data-sec="observations">Observações</button>
+      </div>
+    </div>
+
+    <!-- MICROFONE -->
+    <div>
+      <div class="section-label">Ditado por Voz</div>
+      <div class="mic-area">
+        <button class="mic-btn" id="micBtn" onclick="toggleRecording()" title="Clique para gravar">
+          🎙️
+        </button>
+        <div class="mic-status" id="micStatus">Clique no microfone para começar</div>
+        <div class="interim-box" id="interimBox">O texto reconhecido aparecerá aqui...</div>
+      </div>
+      <div id="browserNotice" class="notice warn" style="display:none">
+        ⚠️ Seu navegador não suporta reconhecimento de voz. Use Google Chrome.
+      </div>
+    </div>
+
+    <!-- AÇÕES -->
+    <div>
+      <div class="section-label">Ações</div>
+      <div class="action-btns">
+        <button class="btn btn-gold" onclick="window.print()">
+          <span class="ico">🖨️</span> Imprimir Laudo
+        </button>
+        <button class="btn btn-outline" onclick="clearSection()">
+          <span class="ico">🗑️</span> Limpar Seção Atual
+        </button>
+        <button class="btn btn-danger" onclick="clearAll()">
+          <span class="ico">⚠️</span> Limpar Tudo
+        </button>
+      </div>
+    </div>
+
+  </div><!-- /sidebar -->
+
+  <!-- MAIN -->
+  <div class="main">
+    <div class="laudo-card">
+
+      <div class="toolbar-row print-hide">
+        <span>📋 Pré-visualização do Laudo · Clique em qualquer campo de texto para editar manualmente</span>
+      </div>
+
+      <div id="printArea">
+
+        <!-- CABEÇALHO CLÍNICA -->
+        <div class="laudo-header">
+          <div class="clinic-info">
+            <div class="clinic-name">
+              <span class="clinic-logo-heart">♥</span>
+              Pro Coração
+            </div>
+            <div class="clinic-sub">Cardiologia &amp; Diagnóstico por Imagem</div>
+          </div>
+          <div class="laudo-date-box">
+            <span style="font-size:0.65rem;letter-spacing:0.1em;text-transform:uppercase;">Data do Exame</span>
+            <strong id="displayDate"></strong>
+            <span id="displayTime" style="color:var(--gray);font-size:0.78rem;"></span>
+          </div>
+        </div>
+
+        <!-- DADOS DO PACIENTE -->
+        <div class="patient-bar">
+          <div class="patient-field">
+            <label>Paciente</label>
+            <span id="displayName">—</span>
+          </div>
+          <div class="patient-field">
+            <label>Data de Nascimento / Idade</label>
+            <span id="displayDOB">—</span>
+          </div>
+          <div class="patient-field">
+            <label>Médico Solicitante</label>
+            <span id="displaySolicitante">—</span>
+          </div>
+        </div>
+
+        <div class="exam-tag" id="displayExam">Ecocardiograma</div>
+
+        <!-- CORPO DO LAUDO -->
+        <div class="laudo-body">
+
+          <div class="laudo-section">
+            <div class="laudo-section-title">Achados / Descrição do Exame</div>
+            <div class="editable-section" id="findings" contenteditable="true"
+              data-placeholder="Descreva os achados do exame aqui. Você pode falar ou digitar diretamente neste campo..."
+              data-sec="findings" onclick="focusSection('findings')"></div>
+          </div>
+
+          <div class="laudo-section">
+            <div class="laudo-section-title">Conclusão</div>
+            <div class="editable-section" id="conclusion" contenteditable="true"
+              data-placeholder="Conclusão e impressão diagnóstica..."
+              data-sec="conclusion" onclick="focusSection('conclusion')"></div>
+          </div>
+
+          <div class="laudo-section">
+            <div class="laudo-section-title">Observações</div>
+            <div class="editable-section" id="observations" contenteditable="true"
+              data-placeholder="Observações adicionais, recomendações ou achados secundários..."
+              data-sec="observations" onclick="focusSection('observations')"></div>
+          </div>
+
+        </div>
+
+        <!-- ASSINATURA -->
+        <div class="signature-area">
+          <div class="signature-block">
+            <div class="sig-line"></div>
+            <div class="sig-name" id="sigName">Dr. ________________</div>
+            <div class="sig-crm" id="sigCRM">CRM: ________________</div>
+            <div class="sig-crm" id="sigSpec" style="margin-top:2px;font-style:italic;"></div>
+          </div>
+        </div>
+
+      </div><!-- /printArea -->
+    </div><!-- /laudo-card -->
+  </div><!-- /main -->
+
+</div><!-- /app -->
+
+<!-- FLOATING INDICATOR -->
+<div class="voice-indicator" id="voiceIndicator">
+  <span class="rec-dot"></span> Gravando...
+</div>
+
+<script>
+// ── STATE ──
+let currentExam = 'Ecocardiograma';
+let currentSection = 'findings';
+let recognition = null;
+let isRecording = false;
+
+// ── CLOCK ──
+function updateClock() {
+  const now = new Date();
+  document.getElementById('clockDisplay').textContent =
+    now.toLocaleDateString('pt-BR', {weekday:'short', day:'2-digit', month:'short', year:'numeric'}) +
+    ' · ' + now.toLocaleTimeString('pt-BR', {hour:'2-digit', minute:'2-digit'});
+  document.getElementById('displayDate').textContent =
+    now.toLocaleDateString('pt-BR', {day:'2-digit', month:'long', year:'numeric'});
+  document.getElementById('displayTime').textContent =
+    now.toLocaleTimeString('pt-BR', {hour:'2-digit', minute:'2-digit'});
+}
+updateClock();
+setInterval(updateClock, 10000);
+
+// ── EXAM TYPE ──
+function selectExam(el, name) {
+  document.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
+  el.classList.add('active');
+  currentExam = name;
+  document.getElementById('displayExam').textContent = name;
+}
+
+// ── SECTION FOCUS ──
+function selectSection(el, sec) {
+  document.querySelectorAll('.sec-chip').forEach(c => c.classList.remove('active'));
+  el.classList.add('active');
+  currentSection = sec;
+  highlightTarget(sec);
+}
+
+function focusSection(sec) {
+  currentSection = sec;
+  document.querySelectorAll('.sec-chip').forEach(c => {
+    c.classList.toggle('active', c.dataset.sec === sec);
+  });
+  highlightTarget(sec);
+}
+
+function highlightTarget(sec) {
+  document.querySelectorAll('.editable-section').forEach(el => {
+    el.classList.toggle('target', el.id === sec);
+  });
+}
+
+// ── UPDATE LAUDO DISPLAY ──
+function updateLaudo() {
+  const name = document.getElementById('patientName').value.trim() || '—';
+  const dob = document.getElementById('patientDOB').value;
+  const sol = document.getElementById('solicitante').value.trim() || '—';
+  const doc = document.getElementById('doctorName').value.trim();
+  const crm = document.getElementById('doctorCRM').value.trim();
+  const spec = document.getElementById('doctorSpec').value.trim();
+
+  document.getElementById('displayName').textContent = name;
+  document.getElementById('displaySolicitante').textContent = sol;
+
+  // DOB + age
+  if (dob) {
+    const bd = new Date(dob + 'T00:00:00');
+    const age = Math.floor((Date.now() - bd) / (365.25 * 24 * 3600 * 1000));
+    document.getElementById('displayDOB').textContent =
+      bd.toLocaleDateString('pt-BR') + ' (' + age + ' anos)';
+  } else {
+    document.getElementById('displayDOB').textContent = '—';
+  }
+
+  document.getElementById('sigName').textContent = doc || 'Dr. ________________';
+  document.getElementById('sigCRM').textContent = crm ? crm : 'CRM: ________________';
+  document.getElementById('sigSpec').textContent = spec;
+}
+
+// ── VOICE RECOGNITION ──
+function initSpeech() {
+  const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if (!SpeechRecognition) {
+    document.getElementById('browserNotice').style.display = 'block';
+    return null;
+  }
+  const r = new SpeechRecognition();
+  r.lang = 'pt-BR';
+  r.continuous = true;
+  r.interimResults = true;
+
+  r.onresult = (event) => {
+    let interim = '';
+    let final = '';
+    for (let i = event.resultIndex; i < event.results.length; i++) {
+      const t = event.results[i][0].transcript;
+      if (event.results[i].isFinal) final += t;
+      else interim += t;
+    }
+    document.getElementById('interimBox').textContent = interim || '...';
+    if (final) appendToSection(final);
+  };
+
+  r.onerror = (e) => {
+    console.warn('Speech error', e);
+    stopRecording();
+  };
+
+  r.onend = () => {
+    if (isRecording) r.start(); // keep alive
+  };
+
+  return r;
+}
+
+function appendToSection(text) {
+  const el = document.getElementById(currentSection);
+  const cur = el.innerText.trim();
+  // Add space separator smartly
+  const sep = cur.length > 0 && !cur.endsWith(' ') ? ' ' : '';
+  el.innerText = cur + sep + text;
+  // Move cursor to end
+  const range = document.createRange();
+  const sel = window.getSelection();
+  range.selectNodeContents(el);
+  range.collapse(false);
+  sel.removeAllRanges();
+  sel.addRange(range);
+}
+
+function toggleRecording() {
+  if (isRecording) stopRecording();
+  else startRecording();
+}
+
+function startRecording() {
+  if (!recognition) recognition = initSpeech();
+  if (!recognition) return;
+  isRecording = true;
+  recognition.start();
+  document.getElementById('micBtn').classList.add('recording');
+  document.getElementById('micBtn').textContent = '⏹️';
+  document.getElementById('micStatus').textContent = '🔴 Gravando... fale o laudo';
+  document.getElementById('micStatus').classList.add('active');
+  document.getElementById('voiceIndicator').classList.add('show');
+  document.getElementById('interimBox').textContent = 'Ouvindo...';
+  highlightTarget(currentSection);
+}
+
+function stopRecording() {
+  isRecording = false;
+  if (recognition) { try { recognition.stop(); } catch(e){} }
+  document.getElementById('micBtn').classList.remove('recording');
+  document.getElementById('micBtn').textContent = '🎙️';
+  document.getElementById('micStatus').textContent = 'Clique no microfone para começar';
+  document.getElementById('micStatus').classList.remove('active');
+  document.getElementById('voiceIndicator').classList.remove('show');
+  document.getElementById('interimBox').textContent = 'O texto reconhecido aparecerá aqui...';
+}
+
+// ── CLEAR ──
+function clearSection() {
+  if (confirm('Limpar a seção atual?')) {
+    document.getElementById(currentSection).innerText = '';
+  }
+}
+function clearAll() {
+  if (confirm('Limpar todo o conteúdo do laudo?')) {
+    ['findings','conclusion','observations'].forEach(id => {
+      document.getElementById(id).innerText = '';
+    });
+  }
+}
+
+// ── INIT ──
+highlightTarget('findings');
+updateLaudo();
+
+// Pre-fill demo
+document.getElementById('patientName').value = 'José Alves da Silva';
+document.getElementById('solicitante').value = 'Dr. Ana Paula Rocha';
+document.getElementById('doctorName').value = 'Dr. Carlos Mendes';
+document.getElementById('doctorCRM').value = 'CRM/RJ 98765';
+document.getElementById('doctorSpec').value = 'Cardiologista / Ecocardiografista';
+
+// Set DOB for age 60
+const today = new Date();
+const dob = new Date(today.getFullYear() - 60, today.getMonth(), today.getDate());
+document.getElementById('patientDOB').value = dob.toISOString().split('T')[0];
+
+updateLaudo();
+</script>
+</body>
+</html>
