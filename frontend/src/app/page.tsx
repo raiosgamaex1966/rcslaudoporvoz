@@ -1,6 +1,19 @@
-"use client";
-
 import React, { useState, useEffect, useRef } from "react";
+import { useRouter } from "next/navigation";
+import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
+import { 
+  Mic, 
+  Square, 
+  Printer, 
+  Plus, 
+  Trash2, 
+  Check, 
+  Loader2, 
+  AlertCircle,
+  LogOut,
+  User,
+  Heart
+} from "lucide-react";
 
 export default function LaudoMedico() {
   const [currentExam, setCurrentExam] = useState("Ecocardiograma");
@@ -26,6 +39,31 @@ export default function LaudoMedico() {
   const findingsRef = useRef<HTMLDivElement>(null);
   const conclusionRef = useRef<HTMLDivElement>(null);
   const observationsRef = useRef<HTMLDivElement>(null);
+  
+  const [session, setSession] = useState<any>(null);
+  const [authLoading, setAuthLoading] = useState(true);
+  
+  const supabase = createClientComponentClient();
+  const router = useRouter();
+
+  // Verificar autenticação
+  useEffect(() => {
+    const checkAuth = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        router.push("/login");
+      } else {
+        setSession(session);
+      }
+      setAuthLoading(false);
+    };
+    checkAuth();
+  }, [router, supabase]);
+
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
+    router.push("/login");
+  };
   
   const recognitionRef = useRef<any>(null);
 
@@ -107,8 +145,7 @@ export default function LaudoMedico() {
       formData.append("examType", currentExam + (examDetails ? " detalhado como: " + examDetails : ""));
       formData.append("currentText", currentText.trim());
 
-      const apiBase = process.env.NEXT_PUBLIC_API_URL || `http://${window.location.hostname}:8000`;
-      const apiUrl = `${apiBase}/transcribe`;
+      const apiUrl = "/api/transcribe";
       
       const response = await fetch(apiUrl, {
         method: "POST",
@@ -116,7 +153,8 @@ export default function LaudoMedico() {
       });
 
       const data = await response.json();
-      if (data.status === "success") {
+      
+      if (data.text) {
         setInterimText(`✅ Processamento concluído.`);
         
         if (data.action === 'replace') {
@@ -126,16 +164,16 @@ export default function LaudoMedico() {
           if (currentSection === "conclusion" && conclusionRef.current) el = conclusionRef.current;
           if (currentSection === "observations" && observationsRef.current) el = observationsRef.current;
           if (el) {
-            el.innerHTML = data.texto_formatado
+            el.innerHTML = data.text
               .replace(/\*\*(.*?)\*\*/g, '<b>$1</b>')
               .replace(/\n/g, '<br>');
           }
         } else {
           // Adicionar ao final (comportamento padrão)
-          appendToSection(data.texto_formatado);
+          appendToSection(data.text);
         }
       } else {
-        setInterimText("Erro ao processar: " + data.detail);
+        setInterimText("Erro ao processar: " + (data.error || "Resposta inválida da IA"));
       }
     } catch (error: any) {
       console.error("Erro na API", error);
@@ -230,19 +268,39 @@ export default function LaudoMedico() {
     window.print();
   };
 
+  if (authLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-slate-50">
+        <Loader2 className="w-8 h-8 animate-spin text-red-600" />
+      </div>
+    );
+  }
+
   return (
     <>
-      <div className="topbar">
+      <div className="topbar no-print">
         <div className="topbar-brand">
-          <span className="heart-icon">❤️</span>
+          <Heart className="text-red-500 fill-red-500 w-6 h-6" />
           <div>
             <div className="topbar-title">Sistema de Laudo por Voz</div>
             <div className="topbar-sub">Pro Coração · Laudos Digitais</div>
           </div>
         </div>
-        <div className="topbar-meta">
-          <span>{fullDateTime}</span><br />
-          <span style={{ fontSize: "0.65rem", opacity: 0.7 }}>Laudos em tempo real por voz</span>
+        
+        <div className="flex items-center gap-6">
+          <div className="text-right">
+            <div className="text-sm font-bold text-slate-800 flex items-center justify-end gap-1">
+              <User className="w-3 h-3" /> {session?.user?.email}
+            </div>
+            <div className="text-[0.65rem] text-slate-500 uppercase tracking-wider">{fullDateTime}</div>
+          </div>
+          
+          <button 
+            onClick={handleLogout}
+            className="flex items-center gap-1 px-3 py-1.5 text-slate-500 hover:text-red-600 hover:bg-red-50 rounded-md transition-all text-sm font-medium border border-slate-200"
+          >
+            <LogOut className="w-4 h-4" /> Sair
+          </button>
         </div>
       </div>
 
