@@ -1,0 +1,407 @@
+@import "tailwindcss";
+
+:root {
+  --crimson: #9B1C2E;
+  --crimson-dark: #6B0E1E;
+  --crimson-light: #C9374E;
+  --gold: #C5A253;
+  --gold-light: #E2C87A;
+  --cream: #FAF7F2;
+  --ink: #1A1208;
+  --gray: #6B6457;
+  --border: #DDD4C3;
+  --white: #FFFFFF;
+  --rec-red: #E53E3E;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: 'DM Sans', sans-serif;
+  background: var(--cream);
+  color: var(--ink);
+  min-height: 100vh;
+}
+
+/* ── TOP BAR ── */
+.topbar {
+  background: var(--crimson-dark);
+  color: var(--cream);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 32px;
+  border-bottom: 3px solid var(--gold);
+}
+.topbar-brand { display: flex; align-items: center; gap: 12px; }
+.heart-icon { font-size: 1.5rem; }
+.topbar-title { font-family: 'Cormorant Garamond', serif; font-size: 1.3rem; letter-spacing: 0.05em; }
+.topbar-sub { font-size: 0.7rem; letter-spacing: 0.15em; text-transform: uppercase; color: var(--gold-light); }
+.topbar-meta { font-size: 0.75rem; color: var(--gold-light); text-align: right; }
+
+/* ── LAYOUT ── */
+.app { display: grid; grid-template-columns: 340px 1fr; gap: 0; min-height: calc(100vh - 64px); }
+
+/* ── SIDEBAR (CONTROLS) ── */
+.sidebar {
+  background: var(--white);
+  border-right: 1px solid var(--border);
+  padding: 24px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  overflow-y: auto;
+}
+
+.section-label {
+  font-size: 0.65rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--gold);
+  font-weight: 500;
+  margin-bottom: 8px;
+  border-bottom: 1px solid var(--border);
+  padding-bottom: 4px;
+}
+
+.field-group { display: flex; flex-direction: column; gap: 12px; }
+
+.field label {
+  font-size: 0.72rem;
+  color: var(--gray);
+  font-weight: 500;
+  display: block;
+  margin-bottom: 4px;
+}
+
+.field input, .field select {
+  width: 100%;
+  padding: 9px 12px;
+  border: 1.5px solid var(--border);
+  border-radius: 6px;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 0.85rem;
+  color: var(--ink);
+  background: var(--cream);
+  transition: border-color 0.2s;
+  outline: none;
+}
+.field input:focus, .field select:focus { border-color: var(--crimson); }
+
+/* ── EXAM TYPE CHIPS ── */
+.exam-chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.chip {
+  padding: 5px 12px;
+  border-radius: 20px;
+  font-size: 0.72rem;
+  font-weight: 500;
+  cursor: pointer;
+  border: 1.5px solid var(--border);
+  background: transparent;
+  color: var(--gray);
+  transition: all 0.15s;
+}
+.chip:hover { border-color: var(--crimson-light); color: var(--crimson); }
+.chip.active { background: var(--crimson); border-color: var(--crimson); color: white; }
+
+/* ── SEÇÕES DO LAUDO ── */
+.section-chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.sec-chip {
+  padding: 4px 10px;
+  border-radius: 4px;
+  font-size: 0.7rem;
+  cursor: pointer;
+  border: 1px solid var(--border);
+  background: transparent;
+  color: var(--gray);
+  transition: all 0.15s;
+}
+.sec-chip:hover { border-color: var(--gold); color: var(--gold); }
+.sec-chip.active { background: var(--gold); border-color: var(--gold); color: var(--ink); }
+
+/* ── MIC BUTTON ── */
+.mic-area { display: flex; flex-direction: column; align-items: center; gap: 12px; padding: 8px 0; }
+
+.mic-btn {
+  width: 80px; height: 80px;
+  border-radius: 50%;
+  border: none;
+  cursor: pointer;
+  background: var(--crimson);
+  color: white;
+  font-size: 2rem;
+  display: flex; align-items: center; justify-content: center;
+  box-shadow: 0 4px 20px rgba(155,28,46,0.35);
+  transition: all 0.2s;
+  position: relative;
+}
+.mic-btn:hover { background: var(--crimson-dark); transform: scale(1.05); }
+.mic-btn.recording {
+  background: var(--rec-red);
+  animation: pulse 1.2s infinite;
+  box-shadow: 0 4px 30px rgba(229,62,62,0.5);
+}
+@keyframes pulse {
+  0%,100% { box-shadow: 0 4px 30px rgba(229,62,62,0.5); }
+  50% { box-shadow: 0 4px 50px rgba(229,62,62,0.8), 0 0 0 12px rgba(229,62,62,0.12); }
+}
+
+.mic-status {
+  font-size: 0.75rem;
+  color: var(--gray);
+  text-align: center;
+  min-height: 18px;
+  transition: color 0.2s;
+}
+.mic-status.active { color: var(--rec-red); font-weight: 500; }
+
+.interim-box {
+  background: #FFF5F5;
+  border: 1px dashed #FC8181;
+  border-radius: 6px;
+  padding: 8px 12px;
+  font-size: 0.8rem;
+  color: #9B2C2C;
+  min-height: 36px;
+  width: 100%;
+  font-style: italic;
+}
+
+/* ── ACTION BUTTONS ── */
+.action-btns { display: flex; flex-direction: column; gap: 8px; }
+
+.btn {
+  padding: 10px 16px;
+  border-radius: 6px;
+  border: none;
+  cursor: pointer;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 0.8rem;
+  font-weight: 500;
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+  transition: all 0.15s;
+}
+.btn-primary { background: var(--crimson); color: white; }
+.btn-primary:hover { background: var(--crimson-dark); }
+.btn-gold { background: var(--gold); color: var(--ink); }
+.btn-gold:hover { background: var(--gold-light); }
+.btn-outline { background: transparent; border: 1.5px solid var(--border); color: var(--gray); }
+.btn-outline:hover { border-color: var(--crimson-light); color: var(--crimson); }
+.btn-danger { background: transparent; border: 1.5px solid #FC8181; color: #C53030; }
+.btn-danger:hover { background: #FFF5F5; }
+.btn span.ico { font-size: 1rem; }
+
+/* ── MAIN AREA ── */
+.main { padding: 28px 36px; overflow-y: auto; }
+
+/* ── LAUDO PREVIEW ── */
+.laudo-card {
+  background: white;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  box-shadow: 0 2px 20px rgba(0,0,0,0.06);
+  max-width: 860px;
+  margin: 0 auto;
+}
+
+/* ── PRINT AREA ── */
+#printArea {
+  padding: 40px 52px;
+  font-family: 'Cormorant Garamond', serif;
+}
+
+/* CABEÇALHO */
+.laudo-header {
+  border-bottom: 2px solid var(--crimson);
+  padding-bottom: 16px;
+  margin-bottom: 20px;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+}
+.clinic-name {
+  font-size: 1.8rem;
+  font-weight: 600;
+  color: var(--crimson-dark);
+  letter-spacing: 0.04em;
+  display: flex; align-items: center; gap: 8px;
+}
+.clinic-sub {
+  font-size: 0.8rem;
+  color: var(--gray);
+  font-family: 'DM Sans', sans-serif;
+  margin-top: 2px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.clinic-logo-heart {
+  color: var(--crimson);
+  font-size: 1.6rem;
+}
+.laudo-date-box {
+  text-align: right;
+  font-family: 'DM Sans', sans-serif;
+  font-size: 0.78rem;
+  color: var(--gray);
+}
+.laudo-date-box strong { display: block; font-size: 1rem; color: var(--ink); }
+
+/* PACIENTE */
+.patient-bar {
+  background: linear-gradient(135deg, var(--crimson-dark) 0%, var(--crimson) 100%);
+  color: white;
+  border-radius: 6px;
+  padding: 12px 20px;
+  margin-bottom: 16px;
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 12px;
+}
+.patient-field label {
+  font-family: 'DM Sans', sans-serif;
+  font-size: 0.6rem;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  opacity: 0.75;
+  display: block;
+  margin-bottom: 2px;
+}
+.patient-field span {
+  font-size: 0.95rem;
+  font-weight: 600;
+}
+
+.exam-tag {
+  display: inline-block;
+  background: var(--gold);
+  color: var(--ink);
+  font-family: 'DM Sans', sans-serif;
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  padding: 4px 14px;
+  border-radius: 20px;
+  margin-bottom: 20px;
+}
+
+/* BODY DO LAUDO */
+.laudo-section {
+  margin-bottom: 18px;
+}
+.laudo-section-title {
+  font-family: 'DM Sans', sans-serif;
+  font-size: 0.65rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--crimson);
+  font-weight: 600;
+  border-bottom: 1px solid #EEE6D8;
+  padding-bottom: 4px;
+  margin-bottom: 8px;
+}
+
+.editable-section {
+  font-size: 1rem;
+  line-height: 1.7;
+  color: var(--ink);
+  min-height: 40px;
+  outline: none;
+  border: 1.5px dashed transparent;
+  border-radius: 4px;
+  padding: 6px 8px;
+  transition: border-color 0.2s, background 0.2s;
+  font-family: 'Cormorant Garamond', serif;
+  white-space: pre-wrap;
+}
+.editable-section:focus, .editable-section.target {
+  border-color: var(--gold);
+  background: #FFFDF5;
+}
+.editable-section:empty:before {
+  content: attr(data-placeholder);
+  color: #C8BAA5;
+  font-style: italic;
+  font-size: 0.95rem;
+}
+
+/* ASSINATURA */
+.signature-area {
+  margin-top: 40px;
+  padding-top: 20px;
+  border-top: 1px solid var(--border);
+  display: flex;
+  justify-content: flex-end;
+}
+.signature-block { text-align: center; min-width: 260px; }
+.sig-line {
+  border-top: 1.5px solid var(--ink);
+  margin-bottom: 6px;
+}
+.sig-name { font-size: 1rem; font-weight: 600; }
+.sig-crm { font-family: 'DM Sans', sans-serif; font-size: 0.75rem; color: var(--gray); }
+
+/* ── VOICE INDICATOR FLOATING ── */
+.voice-indicator {
+  position: fixed;
+  bottom: 28px; right: 28px;
+  background: var(--rec-red);
+  color: white;
+  border-radius: 30px;
+  padding: 10px 20px;
+  font-size: 0.8rem;
+  font-weight: 500;
+  display: none;
+  align-items: center; gap: 8px;
+  box-shadow: 0 4px 20px rgba(229,62,62,0.4);
+  z-index: 100;
+  animation: fadeIn 0.2s;
+}
+.voice-indicator.show { display: flex; }
+.rec-dot { width: 8px; height: 8px; border-radius: 50%; background: white; animation: blink 0.8s infinite; }
+@keyframes blink { 0%,100%{opacity:1} 50%{opacity:0} }
+@keyframes fadeIn { from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:translateY(0)} }
+
+/* ── PRINT ── */
+@media print {
+  body { background: white; }
+  .topbar, .sidebar, .action-btns, .main > *:not(.laudo-card) { display: none !important; }
+  .app { display: block; }
+  .main { padding: 0; }
+  .laudo-card { border: none; box-shadow: none; max-width: 100%; }
+  #printArea { padding: 20px 40px; }
+  .editable-section { border: none !important; background: transparent !important; }
+  .print-hide { display: none !important; }
+  .mic-area, .action-btns, .section-chips { display: none !important; }
+}
+
+.toolbar-row {
+  background: #F5F0E8;
+  border-bottom: 1px solid var(--border);
+  padding: 10px 36px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  max-width: 860px;
+  margin: 0 auto;
+  border-radius: 8px 8px 0 0;
+}
+.toolbar-row span {
+  font-size: 0.72rem;
+  color: var(--gray);
+}
+
+.notice {
+  background: #EFF8F5;
+  border: 1px solid #9AE6B4;
+  border-radius: 6px;
+  padding: 8px 14px;
+  font-size: 0.75rem;
+  color: #276749;
+  margin-top: 4px;
+}
+.notice.warn {
+  background: #FFFBEB;
+  border-color: #F6E05E;
+  color: #744210;
+}
